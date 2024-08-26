@@ -24,47 +24,47 @@ jobs:
       - name: Run a multi-line script
         run: |
             curl -X POST \
-              -H 'Content-type: application/json' \
-              -H 'auth-token: 33c5a7f4-a604-4c20-9bd4-b383a0187969' \
-              --data '{"forceCancelPreviousTesting":true,"storedValues":{"storedValueName1":"Value"}}' \
-              https://api.testrigor.com/api/v1/apps/WeMFbHPqYaRiw72ap/retest
-            
+        -H 'Content-type: application/json' \
+        -H 'auth-token: 14247bca-8ac6-4889-b120-7616b44207a1' \
+          --data '{"forceCancelPreviousTesting":true,"storedValues":{"storedValueName1":"Value"}}' \
+          https://api.testrigor.com/api/v1/apps/RmSCLM86qZB6cxYQZ/retest
+
+          sleep 10
+          
+          while true
+          do
+            echo " "
+            echo "==================================="
+            echo " Checking TestRigor retest"
+            echo "==================================="
+            response=$(curl -i -o - -s -X GET 'https://api.testrigor.com/api/v1/apps/RmSCLM86qZB6cxYQZ/status' -H 'auth-token: 14247bca-8ac6-4889-b120-7616b44207a1' -H 'Accept: application/json')
+            code=$(echo "$response" | grep HTTP |  awk '{print $2}')
+            body=$(echo "$response" | sed -n '/{/,/}/p')
+            echo "Status code: " $code
+            echo "Response: " $body
+            case $code in
+              4*|5*)
+                # 400 or 500 errors
+                echo "Error calling API"
+                exit 1
+                ;;
+              200)
+                # 200: successfully finished
+                echo "Test finished successfully"
+                exit 0
+                ;;
+              227|228)
+                # 227: New - 228: In progress
+                echo "Test is not finished yet"
+                ;;
+              230)
+                # 230: Failed
+                echo "Test finished but failed"
+                exit 1
+                ;;
+              *)
+                echo "Unknown status"
+                exit 1
+              esac
             sleep 10
-            
-            while true
-            do
-              echo " "
-              echo "==================================="
-              echo " Checking TestRigor retest"
-              echo "==================================="
-              response=$(curl -i -o - -s -X GET 'https://api.testrigor.com/api/v1/apps/WeMFbHPqYaRiw72ap/status' -H 'auth-token: 33c5a7f4-a604-4c20-9bd4-b383a0187969' -H 'Accept: application/json')
-              code=$(echo "$response" | grep HTTP |  awk '{print $2}')
-              body=$(echo "$response" | grep status)
-              echo "Status code: " $code
-              echo "Response: " $body
-              case $code in
-                4*|5*)
-                  # 400 or 500 errors
-                  echo "Error calling API"
-                  exit 1
-                  ;;
-                200)
-                  # 200: successfully finished
-                  echo "Test finished successfully"
-                  exit 0
-                  ;;
-                227|228)
-                  # 227: New - 228: In progress
-                  echo "Test is not finished yet"
-                  ;;
-                230)
-                  # 230: Failed
-                  echo "Test finished but failed"
-                  exit 1
-                  ;;
-                *)
-                  echo "Unknown status"
-                  exit 1
-                esac
-              sleep 10
-            done
+          done
